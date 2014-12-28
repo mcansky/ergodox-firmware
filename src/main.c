@@ -41,12 +41,16 @@ uint8_t main_arg_layer;
 uint8_t main_arg_layer_offset;
 uint8_t main_arg_row;
 uint8_t main_arg_col;
+
 bool    main_arg_is_pressed;
 bool    main_arg_was_pressed;
 bool    main_arg_any_non_trans_key_pressed;
 bool    main_arg_trans_key_pressed;
 
 // ----------------------------------------------------------------------------
+
+// changed for layers
+uint8_t       layers_head = 0;
 
 /*
  * main()
@@ -85,6 +89,8 @@ int main(void) {
 		#define layer        main_arg_layer
 		#define is_pressed   main_arg_is_pressed
 		#define was_pressed  main_arg_was_pressed
+		layer_led_set();
+
 		for (row=0; row<KB_ROWS; row++) {
 			for (col=0; col<KB_COLUMNS; col++) {
 				is_pressed = (*main_kb_is_pressed)[row][col];
@@ -121,8 +127,6 @@ int main(void) {
 		_delay_ms(MAKEFILE_DEBOUNCE_TIME);
 
 		// update LEDs
-		if (keyboard_leds & (1<<0)) { kb_led_num_on(); }
-		else { kb_led_num_off(); }
 		if (keyboard_leds & (1<<1)) { kb_led_caps_on(); }
 		else { kb_led_caps_off(); }
 		if (keyboard_leds & (1<<2)) { kb_led_scroll_on(); }
@@ -131,6 +135,7 @@ int main(void) {
 		else { kb_led_compose_off(); }
 		if (keyboard_leds & (1<<4)) { kb_led_kana_on(); }
 		else { kb_led_kana_off(); }
+
 	}
 
 	return 0;
@@ -152,7 +157,7 @@ int main(void) {
  * ----------------------------------------------------------------------------
  * We keep track of which layer is foremost by placing it on a stack.  Layers
  * may appear in the stack more than once.  The base layer will always be
- * layer-0.  
+ * layer-0.
  *
  * Implemented as a fixed size stack.
  * ------------------------------------------------------------------------- */
@@ -168,7 +173,6 @@ struct layers {
 // ----------------------------------------------------------------------------
 
 struct layers layers[MAX_ACTIVE_LAYERS];
-uint8_t       layers_head = 0;
 uint8_t       layers_ids_in_use[MAX_ACTIVE_LAYERS] = {true};
 
 /*
@@ -289,6 +293,26 @@ uint8_t main_layers_get_offset_id(uint8_t id) {
 
 }
 
+/* LED setter using layers */
+
+void layer_led_set() {
+	if (layers[layers_head].layer == 1) {
+		_kb_led_all_off();
+		_kb_led_1_on();
+	}
+	if (layers[layers_head].layer == 2) {
+		_kb_led_all_off();
+		_kb_led_2_on();
+	}
+	if (layers[layers_head].layer == 3) {
+		_kb_led_1_on();
+		_kb_led_2_on();
+		_kb_led_all_off();
+	}
+	if (layers_head == 0) {
+		_kb_led_all_off();
+	}
+}
+
 /* ----------------------------------------------------------------------------
  * ------------------------------------------------------------------------- */
-
